@@ -1,0 +1,7 @@
+david.kimmich.dev {
+        reverse_proxy portfolio:3000
+}
+
+blog.kimmich.dev {
+        reverse_proxy blog:3000
+}
