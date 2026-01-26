@@ -5,3 +5,7 @@ david.kimmich.dev {
 blog.kimmich.dev {
         reverse_proxy blog:3000
 }
+
+tori.kimmich.dev {
+        reverse_proxy tori:80
+}

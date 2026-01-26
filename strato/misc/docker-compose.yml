@@ -25,7 +25,6 @@ services:
       - "--label-enable"
       - "--interval"
       - "30"
-      - "--debug"
     restart: unless-stopped
 
   uptime-kuma:
@@ -82,6 +81,14 @@ services:
     restart: unless-stopped
     env_file:
       - ./blog/nextjs/.env
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+    networks:
+      - reverse_proxy
+
+  tori:
+    image: ${TORI_IMAGE_NAME}
+    restart: unless-stopped
     labels:
       - com.centurylinklabs.watchtower.enable=true
     networks:
