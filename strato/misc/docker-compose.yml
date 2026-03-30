@@ -27,16 +27,6 @@ services:
       - "30"
     restart: unless-stopped
 
-  uptime-kuma:
-    image: louislam/uptime-kuma:1
-    container_name: uptime-kuma
-    ports:
-      - 3001:3001
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - uptime-kuma:/app/data
-    restart: unless-stopped
-
   alpine-cron:
     image: local/alpine-cron
     build:
@@ -94,13 +84,31 @@ services:
     networks:
       - reverse_proxy
 
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    restart: always
+    ports:
+      - 5678:5678
+    environment:
+      - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ${DATA_FOLDER}/local_files:/files
+    networks:
+      - reverse_proxy
+
 volumes:
-  uptime-kuma:
   aws-credentials:
   alpine-cron-logs:
   docker-config:
   caddy_data:
   caddy_config:
+  n8n_data:
 
 networks:
   portfolio:

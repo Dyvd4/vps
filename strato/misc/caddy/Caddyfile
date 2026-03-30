@@ -9,3 +9,9 @@ blog.kimmich.dev {
 tori.kimmich.dev {
         reverse_proxy tori:80
 }
+
+n8n.kimmich.dev {
+        reverse_proxy n8n:5678 {
+                flush_interval -1
+        }
+}
