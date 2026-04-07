@@ -1,0 +1,82 @@
+services:
+  reverse_proxy:
+    image: local/caddy
+    ports:
+      - 443:443
+      - 80:80
+    build:
+      context: caddy
+      dockerfile: Dockerfile
+    pull_policy: never
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - reverse_proxy
+
+  alpine-cron:
+    image: local/alpine-cron
+    build:
+      context: alpine-cron
+      dockerfile: Dockerfile
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      - DOCKER_CONFIG=${DOCKER_CONFIG_PATH}
+    volumes:
+      - aws-credentials:/root/.aws
+      - docker-config:${DOCKER_CONFIG_PATH}
+      - alpine-cron-logs:/var/log
+    env_file:
+      - ./alpine-cron/.env
+
+  watchtower:
+    image: nickfedor/watchtower
+    environment:
+      - DOCKER_CONFIG=${DOCKER_CONFIG_PATH}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - docker-config:${DOCKER_CONFIG_PATH}
+    command:
+      - "--label-enable"
+      - "--interval"
+      - "30"
+    restart: unless-stopped
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    restart: always
+    ports:
+      - 5678:5678
+    environment:
+      - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ${N8N_DATA_FOLDER}/local_files:/files
+    networks:
+      - reverse_proxy
+
+  n8n-rest:
+    image: ${N8N_REST_IMAGE_NAME}
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./n8n-rest/.env
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+volumes:
+  aws-credentials:
+  alpine-cron-logs:
+  docker-config:
+  caddy_data:
+  caddy_config:
+  n8n_data:
+
+networks:
+  reverse_proxy:
